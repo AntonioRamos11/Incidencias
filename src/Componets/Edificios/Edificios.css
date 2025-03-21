@@ -1,0 +1,71 @@
+.background-half {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 50vh;
+    background-color: rgba(4, 60, 100, 0.2);
+    z-index: -1;
+}
+.form-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+}
+.form-wrapper {
+    background-color: #f8f9fa;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    max-width: 400px;
+    width: 100%;
+}
+.form-label {
+    font-size: 14px;
+    font-weight: bold;
+}
+.form-control {
+    font-size: 14px;
+    padding: 8px;
+    margin-bottom: 10px;
+}
+.margin-top-20px {
+    margin-top: 20px;
+}
+.button-container {
+    text-align: center;
+}
+.color-boton-azul {
+    padding: 8px 20px;
+    font-size: 14px;
+    cursor: pointer;
+}
+.submit-btn {
+    width: 100%; 
+    height: 35px; 
+    border: none; 
+    border-radius: 2px; 
+    cursor: pointer;
+    font-size: 14px;
+}
+.input-container {
+    position: relative;
+}
+.input-container input[type="password"] {
+    padding-right: 3rem; 
+}
+.input-container .show-password-button {
+    position: absolute;
+    right: 5%;
+    transform: translateY(-50%);
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    color: #007bff;
+    font-size: 0.9rem;
+    height: 100%;
+    width: 2rem;
+    display: flex;
+    justify-content: center;
+}

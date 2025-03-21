@@ -1,0 +1,131 @@
+.equipos-container {
+    padding: 2%;
+    max-width: 99%;
+    margin: 2% auto;
+    font-family: Arial, sans-serif;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    background-color: #f9f9f9;
+}
+.equipos-title {
+    text-align: left;
+    margin-bottom: 2%;
+    font-size: 2vw;
+}
+.equipos-edificio-list {
+    list-style-type: none;
+    padding: 0;
+}
+.equipos-edificio-item {
+    margin: 1% 0;
+    cursor: pointer;
+    padding: 1%;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background-color: #fff;
+    width: 100%;
+}
+.equipos-edificio-name {
+    font-weight: bold;
+    color: #043c64;
+    font-size: 1.8vw;
+}
+.equipos-espacio-list {
+    list-style-type: none;
+    padding-left: 5%;
+}
+.equipos-espacio-item {
+    margin: 1% 0;
+    cursor: pointer;
+    padding: 0.5%;
+}
+.equipos-espacio-name {
+    color: #db5e15;
+    font-size: 1.6vw;
+}
+.equipos-selected-space {
+    margin-top: 1%;
+    font-style: italic;
+    color: #6C757D;
+    padding: 1%;
+    border-top: 1px solid #ddd;
+}
+.equipos-lista-equipos {
+    margin-top: 1%;
+    list-style-type: none;
+    padding-left: 5%
+}
+.equipos-equipo-item {
+    margin: 1% 0;
+    padding: 1%;
+    background-color: #f1f1f1;
+    border-radius: 4px;
+}
+.equipos-nombre-item{
+    list-style-type: none;
+}
+.equipos-select-button {
+    background-color: #db5e15;
+}
+.equipos-select-button:hover {
+    background-color: #7c0494;
+}
+.equipos-select-button {
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    width: 70px;
+    height: 30px;
+    margin-left: 5%;
+}
+.equipo-clave-letrapequena{
+    font-size: 9px;
+}
+.eI-juntos {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.eI-btn-reportar{
+    border: none;
+    border-radius: 5px;
+    height: 35px;
+    background-color: #7c0494;
+}
+.eI-btn-volver{
+    border: none;
+    background-color: transparent;
+}
+.eI-btn-volver:hover {
+    background-color: transparent;
+    color: inherit;
+}    
+.editar-nomEspacio{
+    color: #7c0494;
+    font-size: 20px;
+}
+.editar-responsable{
+    color: #7c0494;
+    font-size: 17px;
+}
+.scrollableEquipo{
+    max-height: 89.1vh;
+    overflow-y: auto;
+}
+.div-nombre-conexion {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    align-items: center;
+}
+.equipos-equipo-name {
+    flex-grow: 1; 
+}
+.btn-conexion {
+    margin-left: 10px;
+    border: none;
+    border-radius: 5px;
+    background-color: #043c64;
+    width: 10%;
+}
