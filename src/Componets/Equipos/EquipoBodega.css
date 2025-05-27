@@ -1,0 +1,180 @@
+.EquipoBodega-form-container {
+    max-width: 100%;
+    margin: 0 auto;
+    padding: 30px;
+    display: flex;
+    flex-direction: column;
+}
+
+.EquipoBodega-form-wrapper {
+    background-color: #ffffff;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0px 8px 24px rgba(0, 0, 0, 0.12);
+    transition: all 0.3s ease;
+}
+
+.EquipoBodega-form-columns {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+}
+
+.EquipoBodega-column .form-select, 
+.EquipoBodega-column .form-control {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    font-size: 15px;
+    transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+.EquipoBodega-column .form-select:focus, 
+.EquipoBodega-column .form-control:focus {
+    border-color: #043c64;
+    box-shadow: 0 0 0 3px rgba(4, 60, 100, 0.1);
+    outline: none;
+}
+
+.EquipoBodega-radio-group {
+    display: flex;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+    gap: 16px;
+}
+
+.EquipoBodega-radio-group .form-check {
+    display: flex;
+    align-items: center;
+    margin-right: 16px;
+}
+
+.EquipoBodega-radio-group .form-check-input {
+    margin-right: 6px;
+    cursor: pointer;
+}
+
+.EquipoBodega-radio-group .form-check-input:checked {
+    background-color: #043c64;
+    border-color: #043c64;
+}
+
+.EquipoBodega-radio-group .form-check-label {
+    cursor: pointer;
+}
+
+.EquipoBodega-mb-3 {
+    margin-bottom: 20px;
+}
+
+.margin-top-sfw {
+    margin-top: 16px;
+}
+
+.tam-pos-btn {
+    height: auto;
+    width: 100%;
+    margin-top: 30px;
+    padding: 12px 20px;
+    background-color: #043c64;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.3s, transform 0.2s;
+}
+
+.tam-pos-btn:hover {
+    background-color: #0356a0;
+    transform: translateY(-2px);
+}
+
+.scrollable {
+    max-height: 250px;
+    overflow-y: auto;
+    padding: 16px;
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    margin-bottom: 20px;
+    background-color: #f8f9fa;
+}
+
+.scrollablediv {
+    max-height: 60vh;
+    overflow-y: auto;
+    border-radius: 6px;
+    box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.1);
+}
+
+.custom-buttonEB {
+    width: 100%;
+    background-color: transparent;
+    border: none;
+    color: #212529;
+    font-size: 1rem;
+    text-align: left;
+    padding: 12px 16px;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: all 0.2s;
+}
+
+.custom-buttonEB:hover {
+    background-color: rgba(4, 60, 100, 0.05);
+}
+
+/* Custom scrollbars */
+.scrollable::-webkit-scrollbar, 
+.scrollablediv::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+.scrollable::-webkit-scrollbar-track,
+.scrollablediv::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+.scrollable::-webkit-scrollbar-thumb,
+.scrollablediv::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 4px;
+}
+
+.scrollable::-webkit-scrollbar-thumb:hover,
+.scrollablediv::-webkit-scrollbar-thumb:hover {
+    background: #a1a1a1;
+}
+
+/* Form field labels */
+.EquipoBodega-form-label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 500;
+    color: #343a40;
+}
+
+/* Responsive adjustments */
+@media (max-width: 992px) {
+    .EquipoBodega-form-columns {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .EquipoBodega-form-columns {
+        grid-template-columns: 1fr;
+    }
+    
+    .EquipoBodega-form-wrapper {
+        padding: 20px;
+    }
+    
+    .EquipoBodega-form-container {
+        padding: 15px;
+    }
+}

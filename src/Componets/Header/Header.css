@@ -1,0 +1,147 @@
+.div-general {
+    background: #043c64;
+    padding: 15px 5%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    box-sizing: border-box;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+.header-editar-btn {
+    margin-right: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    transition: all 0.2s ease;
+}
+
+.header-editar-btn:hover {
+    transform: rotate(20deg);
+    background-color: rgba(255, 255, 255, 0.3);
+}
+
+.tam-letra-45px {
+    font-size: 45px;
+}
+
+.nombre-escuela {
+    display: inline-block;
+}
+
+.loco-culiacan {
+    width: 7%;
+    position: relative;
+    right: 40%;
+    top: 18px;
+}
+
+.tam-letra {
+    font-size: 24px;
+    font-weight: bold;
+    color: white;
+    letter-spacing: 0.5px;
+}
+
+.tam-letra-17px {
+    font-size: 16px;
+}
+
+.tam-letra-18px {
+    font-size: 16px;
+    color: white;
+}
+
+.color-boton-lila {
+    background-color: transparent;
+    color: white;
+    transition: transform 0.2s ease, color 0.2s ease;
+}
+
+.btn-sin-border {
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.tam-btn-header {
+    height: 32px;
+    width: 32px;
+    border-radius: 50%;
+}
+
+.header-editar-btn {
+    margin-right: 10px;
+}
+
+.header-editar-btn:hover {
+    transform: scale(1.15);
+    color: #f8f9fa;
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.div-nombre-logo {
+    display: flex;
+    align-items: center;
+}
+
+.div-inf-actual {
+    display: flex;
+    align-items: center;
+}
+
+.div-usuario-header {
+    display: flex;
+    align-items: center;
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 24px;
+    padding: 5px 15px;
+    transition: all 0.3s ease;
+}
+
+.div-usuario-header:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+}
+
+.nito {
+    font-weight: bold;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .div-general {
+        padding: 12px 4%;
+    }
+    
+    .tam-letra {
+        font-size: 20px;
+    }
+    
+    .tam-letra-18px {
+        font-size: 14px;
+    }
+}
+
+@media (max-width: 480px) {
+    .div-general {
+        padding: 10px 3%;
+    }
+    
+    .tam-letra {
+        font-size: 18px;
+    }
+    
+    .tam-btn-header {
+        height: 28px;
+        width: 28px;
+    }
+}
