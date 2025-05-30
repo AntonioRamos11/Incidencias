@@ -2276,6 +2276,46 @@ app.get('/ObtenerCambioPiezas', async (req, res) => {
     }
 });
 
+// Modificar el endpoint en API.js
+// Find the SelectTecnicos endpoint and fix the query
+
+app.get('/SelectTecnicos', async (req, res) => {
+    let pool = null;
+    try {
+        const { id_especializacion } = req.query;
+        console.log('SelectTecnicos called with id_especializacion:', id_especializacion);
+        
+        pool = await new sql.ConnectionPool(config).connect();
+        
+        // Using the correct schema based on your other queries
+        const result = await pool.request()
+            .input('id_especializacion', sql.Int, id_especializacion)
+            .query(`
+                SELECT u.id_usuario, u.nombre + ' ' + u.apellido as nombre, 
+                       t.num_incidencias, 
+                       CAST(ISNULL(t.promedio_calificaciones, 0) AS DECIMAL(3,1)) AS calificacion
+                FROM USUARIO u 
+                JOIN TECNICO t ON u.id_usuario = t.id_usuario 
+                WHERE t.id_especializacion = @id_especializacion 
+                  AND t.id_estadoDisponibilidad = 1 
+                  AND t.jefe != 1
+                ORDER BY t.num_incidencias ASC
+            `);
+        
+        console.log('Query successful, returning records:', result.recordset.length);
+        res.status(200).json(result.recordset);
+    } catch (err) {
+        console.error('Error in SelectTecnicos:', err);
+        if (err.originalError) {
+            console.error('SQL Error details:', err.originalError);
+        }
+        res.status(500).send('Error al obtener los técnicos');
+    } finally {
+        if (pool) {
+            await pool.close();
+        }
+    }
+});
 // Endpoint para obtener la solución personalizada
 app.get('/ObtenerSolucion', async (req, res) => {
     let pool = null;

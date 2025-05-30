@@ -2023,7 +2023,9 @@ export const Principal_otro = () => {
                                             <label htmlFor="" className="form-label nito">Asignar a: </label>
                                             <select className="form-select" value={tecnico} onChange={(e) => setTecnico(e.target.value)}>
                                                 {tecnicos.map((tec, index) => (
-                                                    <option value={tec.id_usuario} key={tec.id_usuario}> {tec.nombre} - {tec.num_incidencias}</option>
+                                                    <option value={tec.id_usuario} key={tec.id_usuario}>
+                                                        {tec.nombre} - {tec.num_incidencias} incidencias - Calificación: {tec.calificacion ? `${tec.calificacion}★` : 'Sin calificar'}
+                                                    </option>
                                                 ))}
                                             </select>
                                         </div>
