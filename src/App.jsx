@@ -10,6 +10,12 @@ import { Principal_otro } from './Componets/Principal/Principal_otro.jsx';
 import { EquipoBodega } from './Componets/Equipos/Equipo_bodega.jsx'
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { EquipodeIncidencia } from './Componets/Incidencias/EquipodeIncidencia.jsx';
+import { ReportarProblema } from './Componets/Problemas/ReportarProblema.jsx';
+import { ListaProblemas } from './Componets/Problemas/ListaProblemas.jsx';
+import { AsociarProblemas } from './Componets/Problemas/AsociarProblemas.jsx';
+import { DetalleProblema } from './Componets/Problemas/DetalleProblema.jsx';
+import { TodasIncidencias } from './Componets/Problemas/TodasIncidencias';
+import { DetallesIncidencia } from './Componets/Incidencias/DetallesIncidencia';
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
 
 export function App() {
@@ -56,12 +62,19 @@ function Content() {
             <Routes>
                 <Route path="/" element={<Navigate to="/Login" />} />
                 <Route path="/Login" element={<Login />} />
+                <Route path="/todas-incidencias" element={<TodasIncidencias />} />
                 <Route path="/Principal" element={<Principal_otro />} />
                 <Route path="/Principal_administrador" element={<Principal_administrador />} />
                 <Route path="/Editar_Administrador" element={<Editar_Administrador />} />
                 <Route path="/Editar_jefe_departamento" element={<Editar_jefe_departamento />} />
                 <Route path="/EquipoBodega" element={<EquipoBodega />} />
                 <Route path="/EquipodeIncidencia" element={<EquipodeIncidencia />} />
+                <Route path="/reportar-problema" element={<ReportarProblema />} />
+                <Route path="/problemas" element={<ListaProblemas />} />
+                <Route path="/todas-incidencias" element={<TodasIncidencias />} />
+                <Route path="/asociar-problemas" element={<AsociarProblemas />} />
+                <Route path="/problema/:id" element={<DetalleProblema />} />
+                <Route path="/detalles-incidencia/:id" element={<DetallesIncidencia />} />
             </Routes>
             {showFooter && <Footer />}
         </>

@@ -3,9 +3,29 @@ import { useNavigate } from 'react-router-dom';
 import axios from "axios";
 import React, { useState, useEffect } from 'react';
 
-export const Principal_otro = () => {
-    const [otroDiagnostico, setOtroDiagnostico] = useState(''); // Add this state
+// Add these functions near your other handler functions (like handleEquipo, handleEquipodeIncidencia, etc.)
 
+
+export const Principal_otro = () => {
+    
+    const handleGuardarSolucion = async () => {
+        try {
+            const response = await axios.post('http://localhost:3000/GuardarSolucion', {
+                id_incidencia: id_incidencia,
+                solucion: solucionPersonalizada
+            });
+    
+            if (response.status === 200) {
+                alert('Solución guardada correctamente');
+            } else {
+                alert('Error al guardar la solución');
+            }
+        } catch (error) {
+            console.error('Error al guardar la solución:', error);
+            alert('Error al guardar la solución');
+        }
+    };
+    const [otroDiagnostico, setOtroDiagnostico] = useState(''); 
     const navigate = useNavigate();
     const [showModal, setShowModal] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
@@ -96,7 +116,8 @@ export const Principal_otro = () => {
     const [cauDes, setCauDes] = useState('');
     const [btnAutorizacion, setBtnAutorizacion] = useState('');
     const [det, setDet] = useState('');
-    
+    const [solucionPersonalizada, setSolucionPersonalizada] = useState('');
+
 
     const handleRatingClick = (value) => {
         setSelectedRating(value);
@@ -719,8 +740,8 @@ export const Principal_otro = () => {
                     setFolios(foliosA);
                     setFechas(fechasA);
                     setDetalles(tiposIncidenciaA.map((tipo, index) => ({ 
-                            tipoIncidencia: tipo, 
-                            descripcion: descripcionesA[index] 
+                        tipoIncidencia: tipo, 
+                        descripcion: descripcionesA[index] 
                     })));
                     setEstados(estadosA);
                     setColores(coloresA);
@@ -905,7 +926,7 @@ export const Principal_otro = () => {
                 setAutorizados(autorizadosA);
                 setSers(sersA);
                 setDetalleHora(dH);
-                setBtnAutorizacion(auto);
+                setBtnAutorizaciones(auto);
                 }
             }
         }catch(error){
@@ -1352,6 +1373,16 @@ export const Principal_otro = () => {
         }
     };
 
+    
+    const handleListaProblemas = (e) => {
+        e.preventDefault();
+        navigate('/problemas');
+    };
+    
+    const handleAsociarProblemas = (e) => {
+        e.preventDefault();
+        navigate('/asociar-problemas');
+    };
     const handleGuardarDiagnostico = async () => {
         try {
             const tIncidencia = await axios.post(`http://localhost:3000/tIncidencia`, {
@@ -1408,7 +1439,6 @@ export const Principal_otro = () => {
                 }
             }) // Obtener el id_equipo desde data-id-equipo
             //setIdEquipo(idEquipo);
-            console.log(idEquipo.data[0].id_equipo);
             detalleEquipo(idEquipo.data[0].id_equipo); // Pasar el idEquipo correctamente
             setShowModal4(true);
         } catch (err) {
@@ -1600,14 +1630,29 @@ export const Principal_otro = () => {
             console.error('Error al obtener los errores conocidos', error);
         }
     }
-
+    const handleTodasIncidencias = (e) => {
+        e.preventDefault();
+        navigate('/todas-incidencias');
+    };
     const handleSolucion = async (e) => {
         e.preventDefault();
         try {
+            if (!expanded) {
+                // Si es primera vez que se abre, intenta cargar la solución existente
+                try {
+                    const response = await axios.get('http://localhost:3000/ObtenerSolucion', {
+                        params: { id_incidencia: id_incidencia }
+                    });
+                    if (response.data && response.data.solucion) {
+                        setSolucionPersonalizada(response.data.solucion);
+                    }
+                } catch (error) {
+                    console.error('Error al cargar la solución:', error);
+                }
+            }
             setExpanded(!expanded);
-            
         } catch (error) {
-            console.error('Error al dar de alta el error', error);
+            console.error('Error al abrir/cerrar sección de solución:', error);
         }
     };
     
@@ -1665,17 +1710,37 @@ export const Principal_otro = () => {
             console.error('Error al solicitar petición', error);
         }
     };
-
+    
     return (
         <div className="principal-admin-container">
-            <div className="principal-admin-buttons">
-                {(permisos === '1' || permisos === '4') && (
-                    <button className="btn btn-primary principal-admin-btn" onClick={handleEquipo}>Equipo</button>
-                )}
-                <button type="button" className="btn btn-danger principal-admin-btn" onClick={handleEquipodeIncidencia}>Nueva Solicitud</button>
-                <button type="button" className="btn btn-success principal-admin-btn" onClick={handleChangePasswordClick}>Contraseña</button>
-                <button type="button" className="btn btn-info principal-admin-btn" onClick={handleCerrarSesion}>Cerrar Sesión</button>
-            </div>
+        <div className="principal-admin-buttons">
+        <button type="button" className="btn btn-light principal-admin-btn" onClick={handleHomeClick}>Menú principal</button>
+        
+        {(permisos === '1' || permisos === '4') && (
+            <button className="btn btn-primary principal-admin-btn" onClick={handleEquipo}>Equipo</button>
+        )}
+        
+        <button type="button" className="btn btn-danger principal-admin-btn" onClick={handleEquipodeIncidencia}>Nueva Solicitud</button>
+        
+        <button type="button" className="btn btn-warning principal-admin-btn" onClick={handleListaProblemas}>Lista de Problemas</button>
+        
+        {permisos === '1' && (
+            <button type="button" className="btn btn-primary principal-admin-btn" onClick={handleAsociarProblemas}>
+            Asociar Problemas
+            </button>
+        )}
+        
+        <button 
+            type="button" 
+            className="btn btn-info principal-admin-btn" 
+            onClick={handleTodasIncidencias}
+        >
+            Todas las Incidencias
+        </button>
+        
+        <button type="button" className="btn btn-success principal-admin-btn" onClick={handleChangePasswordClick}>Contraseña</button>
+        <button type="button" className="btn btn-info principal-admin-btn" onClick={handleCerrarSesion}>Cerrar Sesión</button>
+        </div>
             <div className='pO-div-tabla'>
                 <table class="tabla" className='pO-tabla-centrado'>
                     <thead className='pO-tabla-encabezado color-blanco'>
@@ -1949,10 +2014,10 @@ export const Principal_otro = () => {
                                     { estado === 'En Proceso' && (permisos === '4' || permisos === '5') &&  btnDiag === false && (
                                         <button type="button" className="tam-letra-17px color-boton-lila color-blanco btn-sin-border btn-tam-diagnostico" onClick={handleDiagnostico}>Diagnóstico</button>
                                     )}
-                                    {( permisos === '1' && infoPieza) && (
+                                    {( permisos === '1') && (
                                         <>
-                                        <span className='nito'>Pieza que solicita: </span>
-                                        <span>{infoPieza}</span>
+                                        <span className='nito'>Solución Personalizada: </span>
+                                        <span>{solucionPersonalizada}</span>
                                         </>
                                     )}
                                     {( permisos === '2' && infoPieza) && (
@@ -1968,26 +2033,25 @@ export const Principal_otro = () => {
                                             </button>
                                             {expanded && (
                                                 <div>
-                                                    <span className='nito'>Diagnóstico: </span>
-                                                    <span> {diagNom}</span>
-                                                    <br />
-                                                    <span className='nito'>Pieza: </span>
-                                                    <span> {pzaNom}</span>
-                                                    <br />
-                                                    <span className='nito'>Servicio: </span>
-                                                    <span> {serNom}</span>
-                                                    <br />
-                                                    <span className='nito'>Duración del Servicio: </span>
-                                                    <span> {serDur}</span>
-                                                    <br />
-                                                    <span className='nito'>Error Conocido: </span>
-                                                    <span> {erDes}</span>
-                                                    <br />
-                                                    <span className='nito'>Causa Raíz: </span>
-                                                    <span> {caunom}</span>
-                                                    <br />
-                                                    <span className='nito'>Descripción de causa raíz: </span>
-                                                    <span> {cauDes}</span>
+                                                    <div className="mt-3 mb-4">
+                                                        <span className='nito'>Solución Personalizada: </span>
+                                                        <textarea
+                                                            className="form-control mt-2"
+                                                            rows="4"
+                                                            placeholder="Describe la solución aplicada a esta incidencia..."
+                                                            value={solucionPersonalizada}
+                                                            onChange={(e) => setSolucionPersonalizada(e.target.value)}
+                                                        ></textarea>
+                                                        <button 
+                                                            type="button" 
+                                                            className="btn btn-sm btn-success mt-2" 
+                                                            onClick={handleGuardarSolucion}
+                                                        >
+                                                            Guardar solución
+                                                        </button>
+                                                    </div>
+                                                    
+                                                    
                                                 </div>
                                             )}
                                         </div>

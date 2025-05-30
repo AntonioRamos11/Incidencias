@@ -10,7 +10,8 @@ app.use(express.json());
 // Configuración de conexión a SQL Server
 const config = {
     user: 'sa',
-    password: 'Ramos123',
+    //password: 'Ramos123',
+    password: 'Ramosfe1101@',
     server: 'localhost', // Ejemplo: localhost
     database: 'proyectoITIL',
     options: {
@@ -2045,6 +2046,550 @@ app.get('/DetalleTablaTecnicoTerminados', async (req, res) => {
     } catch (error) {
         console.log('Error al obtener datos de la tabla: ', error);
         res.status(500).json({ error: 'Error al obtener datos de la tabla' });
+    }
+});
+
+app.get('/Problemas', async (req, res) => {
+    let pool = null;
+    try {
+        pool = await new sql.ConnectionPool(config).connect();
+        const result = await pool.request().query(`
+            SELECT 
+                p.id_problema,
+                p.titulo,
+                p.descripcion,
+                p.fecha_creacion,
+                p.fecha_resolucion,
+                p.estado, 
+                p.prioridad,
+                p.categoria,
+                (SELECT COUNT(*) FROM PROBLEMA_INCIDENCIA WHERE id_problema = p.id_problema) AS num_incidencias
+            FROM 
+                PROBLEMAS p
+            ORDER BY 
+                p.fecha_creacion DESC;
+        `);
+        res.status(200).json(result.recordset);
+    } catch (error) {
+        console.error('Error al obtener problemas:', error.message);
+        res.status(500).send('Error al obtener problemas');
+    } finally {
+        if (pool) {
+            await pool.close();
+        }
+    }
+});
+
+app.delete('/EliminarAsociacionProblema', async (req, res) => {
+    let pool = null;
+    try {
+        pool = await new sql.ConnectionPool(config).connect();
+        const { id_problema, id_incidencia } = req.body;
+        
+        // Verificar que exista la asociación
+        const checkResult = await pool.request()
+            .input('id_problema', sql.Int, id_problema)
+            .input('id_incidencia', sql.Int, id_incidencia)
+            .query(`
+                SELECT 1 
+                FROM PROBLEMA_INCIDENCIA 
+                WHERE id_problema = @id_problema AND id_incidencia = @id_incidencia
+            `);
+            
+        if (checkResult.recordset.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: 'La asociación no existe'
+            });
+        }
+        
+        // Eliminar la asociación
+        await pool.request()
+            .input('id_problema', sql.Int, id_problema)
+            .input('id_incidencia', sql.Int, id_incidencia)
+            .query(`
+                DELETE FROM PROBLEMA_INCIDENCIA 
+                WHERE id_problema = @id_problema AND id_incidencia = @id_incidencia
+            `);
+            
+        res.status(200).json({
+            success: true,
+            message: 'Asociación eliminada exitosamente'
+        });
+    } catch (error) {
+        console.error('Error al eliminar asociación:', error.message);
+        res.status(500).json({
+            success: false,
+            message: 'Error al eliminar asociación: ' + error.message
+        });
+    } finally {
+        if (pool) {
+            await pool.close();
+        }
+    }
+});
+
+// Endpoint para guardar la solución personalizada
+app.post('/GuardarSolucion', async (req, res) => {
+    let pool = null;
+    try {
+        const { id_incidencia, solucion } = req.body;
+        if (!id_incidencia || !solucion) {
+            return res.status(400).json({ 
+                success: false, 
+                message: 'Se requiere id_incidencia y solucion' 
+            });
+        }
+        
+        pool = await new sql.ConnectionPool(config).connect();
+        
+        // Verificar si ya existe una solución para esta incidencia
+        const checkResult = await pool.request()
+            .input('id_incidencia', sql.Int, id_incidencia)
+            .query(`SELECT 1 FROM SOLUCIONES_PERSONALIZADAS WHERE id_incidencia = @id_incidencia`);
+            
+        if (checkResult.recordset.length > 0) {
+            // Actualizar solución existente
+            await pool.request()
+                .input('id_incidencia', sql.Int, id_incidencia)
+                .input('solucion', sql.NVarChar(1000), solucion)
+                .query(`UPDATE SOLUCIONES_PERSONALIZADAS SET solucion = @solucion WHERE id_incidencia = @id_incidencia`);
+        } else {
+            // Insertar nueva solución
+            await pool.request()
+                .input('id_incidencia', sql.Int, id_incidencia)
+                .input('solucion', sql.NVarChar(1000), solucion)
+                .query(`INSERT INTO SOLUCIONES_PERSONALIZADAS (id_incidencia, solucion) VALUES (@id_incidencia, @solucion)`);
+        }
+        
+        res.status(200).json({
+            success: true,
+            message: 'Solución guardada exitosamente'
+        });
+    } catch (error) {
+        console.error('Error al guardar solución:', error.message);
+        res.status(500).json({
+            success: false,
+            message: 'Error al guardar solución: ' + error.message
+        });
+    } finally {
+        if (pool) {
+            await pool.close();
+        }
+    }
+});
+
+// Endpoint para obtener la solución personalizada
+app.get('/ObtenerSolucion', async (req, res) => {
+    let pool = null;
+    try {
+        const { id_incidencia } = req.query;
+        if (!id_incidencia) {
+            return res.status(400).json({ error: 'Se requiere id_incidencia' });
+        }
+        
+        pool = await new sql.ConnectionPool(config).connect();
+        const result = await pool.request()
+            .input('id_incidencia', sql.Int, id_incidencia)
+            .query(`SELECT solucion FROM SOLUCIONES_PERSONALIZADAS WHERE id_incidencia = @id_incidencia`);
+        
+        if (result.recordset.length > 0) {
+            res.status(200).json({ solucion: result.recordset[0].solucion });
+        } else {
+            res.status(200).json({ solucion: '' });
+        }
+    } catch (error) {
+        console.error('Error al obtener solución:', error.message);
+        res.status(500).json({ error: 'Error al obtener solución' });
+    } finally {
+        if (pool) {
+            await pool.close();
+        }
+    }
+});
+
+app.get('/DetalleIncidencia2', async (req, res) => {
+    let pool = null;
+    try {
+        const { id_incidencia } = req.query;
+        if (!id_incidencia) {
+            return res.status(400).json({ error: 'Se requiere id_incidencia' });
+        }
+        
+        console.log('Solicitando detalles para incidencia:', id_incidencia);
+        
+        pool = await new sql.ConnectionPool(config).connect();
+        const result = await pool.request()
+            .input('id_incidencia', sql.Int, id_incidencia)
+            .query(`
+                SELECT i.*,
+                       t.nombre AS nombreIncidencia,
+                       e.estado_incidencia AS estado,
+                       u.nombre AS nombre_usuario,
+                       d.nombre AS nombre_departamento,
+                       esp.nombre AS nombre_espacio,
+                       esp.ubicacion_esp AS ubicacion_esp,
+                       edi.nombre AS nombre_edificio,
+                       ISNULL(resp.nombre + ' ' + resp.apellido, 'No asignado') AS responsable,
+                       p.nombre AS nombre_prioridad,
+                       p.descripcion AS descripcion_prioridad
+                FROM INCIDENCIA i
+                LEFT JOIN TIPO_INCIDENCIA t ON i.id_tipoincidencia = t.id_tipoincidencia
+                LEFT JOIN ESTADO_INCIDENCIA e ON i.id_estado = e.id_estado
+                LEFT JOIN USUARIO u ON i.id_tecnicoAsignado = u.id_usuario
+                LEFT JOIN INCIDENCIA_LUGAR il ON i.id_incidencia = il.id_incidencia
+                LEFT JOIN ESPACIOS esp ON il.id_espacio = esp.id_espacio
+                LEFT JOIN EDIFICIO edi ON esp.id_edificio = edi.id_edificio
+                LEFT JOIN USUARIO resp ON esp.responsable = resp.id_usuario
+                LEFT JOIN DEPARTAMENTO d ON esp.id_departamento = d.id_departamento
+                LEFT JOIN PRIORIDAD p ON i.id_prioridad = p.id_prioridad
+                WHERE i.id_incidencia = @id_incidencia
+            `);
+        
+        if (result.recordset.length === 0) {
+            return res.status(404).json({ error: 'Incidencia no encontrada' });
+        }
+        
+        console.log('Datos encontrados:', result.recordset[0]);
+        
+        res.status(200).json(result.recordset[0]);
+    } catch (error) {
+        console.error('Error al obtener detalles de la incidencia:', error.message);
+        console.error('Datos recibidos:', req.query);
+        res.status(500).json({ error: 'Error al obtener detalles de la incidencia' });
+    } finally {
+        if (pool) {
+            await pool.close();
+        }
+    }
+});
+app.get('/IncidenciasAsociadasProblema', async (req, res) => {
+    let pool = null;
+    try {
+        const { id_problema } = req.query;
+        pool = await new sql.ConnectionPool(config).connect();
+        
+        // Updated query with corrected column name: id_tecnicoAsignado instead of id_usuario_asignado
+        const result = await pool.request()
+            .input('id_problema', sql.Int, id_problema)
+            .query(`
+                SELECT i.*, d.nombre as nombre_departamento, u.nombre as nombre_usuario
+                FROM INCIDENCIA i
+                JOIN PROBLEMA_INCIDENCIA pi ON i.id_incidencia = pi.id_incidencia
+                LEFT JOIN USUARIO u ON i.id_tecnicoAsignado = u.id_usuario
+                LEFT JOIN INCIDENCIA_LUGAR il ON i.id_incidencia = il.id_incidencia
+                LEFT JOIN ESPACIOS e ON il.id_espacio = e.id_espacio
+                LEFT JOIN DEPARTAMENTO d ON e.id_departamento = d.id_departamento
+                WHERE pi.id_problema = @id_problema
+                ORDER BY i.fecha DESC
+            `);
+        
+        // Map status IDs to names
+        const recordsWithMappedStates = result.recordset.map(record => ({
+            ...record,
+            estado: mapEstadoId(record.id_estado)
+        }));
+        
+        res.status(200).json(recordsWithMappedStates);
+    } catch (error) {
+        console.error('Error al obtener incidencias asociadas:', error.message);
+        console.error('Datos recibidos:', req.query);
+        res.status(500).send('Error al obtener incidencias asociadas al problema');
+    } finally {
+        if (pool) {
+            await pool.close();
+        }
+    }
+});
+// Función para mapear IDs de estado a nombres
+function mapEstadoId(id) {
+    const estados = {
+        1: 'Enviado',
+        2: 'En Proceso',
+        3: 'Terminado',
+        4: 'Liberado',
+        5: 'Rechazado'
+    };
+    return estados[id] || 'Desconocido';
+}
+app.post('/AsociarIncidenciaProblema', async (req, res) => {
+    let pool = null;
+    try {
+        pool = await new sql.ConnectionPool(config).connect();
+        const { id_incidencia, id_problema } = req.body;
+        
+        // Verificar que la incidencia existe
+        const checkIncidencia = await pool.request()
+            .input('id_incidencia', sql.Int, id_incidencia)
+            .query('SELECT id_estado FROM INCIDENCIA WHERE id_incidencia = @id_incidencia');
+        
+        if (checkIncidencia.recordset.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: 'La incidencia no existe'
+            });
+        }
+        
+        // Verificar si la asociación ya existe
+        const checkAsociacion = await pool.request()
+            .input('id_problema', sql.Int, id_problema)
+            .input('id_incidencia', sql.Int, id_incidencia)
+            .query('SELECT 1 FROM PROBLEMA_INCIDENCIA WHERE id_problema = @id_problema AND id_incidencia = @id_incidencia');
+        
+        // Si la asociación ya existe, devolver éxito sin hacer cambios
+        if (checkAsociacion.recordset.length > 0) {
+            return res.status(200).json({
+                success: true,
+                message: 'La asociación ya existía previamente'
+            });
+        }
+        
+        // Asociar la incidencia al problema
+        await pool.request()
+            .input('id_problema', sql.Int, id_problema)
+            .input('id_incidencia', sql.Int, id_incidencia)
+            .query('INSERT INTO PROBLEMA_INCIDENCIA (id_problema, id_incidencia, fecha_asociacion) VALUES (@id_problema, @id_incidencia, GETDATE())');
+        
+        res.status(200).json({
+            success: true,
+            message: 'Incidencia asociada al problema exitosamente'
+        });
+    } catch (error) {
+        console.error('Error al asociar incidencia:', error.message);
+        res.status(500).json({
+            success: false,
+            message: 'Error al asociar incidencia: ' + error.message
+        });
+    } finally {
+        if (pool) {
+            await pool.close();
+        }
+    }
+});
+app.post('/AsociarProblemasSimilares', async (req, res) => {
+    try {
+        await sql.connect(config);
+        const { id_problema_principal, id_problema_secundario } = req.body;
+        
+        // Verificar que ambos problemas existen
+        const checkProblemas = await sql.query`
+            SELECT COUNT(*) AS count
+            FROM PROBLEMAS
+            WHERE id_problema IN (${id_problema_principal}, ${id_problema_secundario});
+        `;
+        
+        if (checkProblemas.recordset[0].count !== 2) {
+            return res.status(404).json({
+                success: false,
+                message: 'Uno o ambos problemas no existen'
+            });
+        }
+        
+        // Asociar los problemas
+        await sql.query`
+            INSERT INTO PROBLEMAS_SIMILARES (
+                id_problema_principal,
+                id_problema_secundario,
+                fecha_asociacion
+            ) VALUES (
+                ${id_problema_principal},
+                ${id_problema_secundario},
+                GETDATE()
+            )
+        `;
+        
+        res.status(200).json({
+            success: true,
+            message: 'Problemas asociados exitosamente'
+        });
+    } catch (error) {
+        console.error('Error al asociar problemas:', error.message);
+        res.status(500).send('Error al asociar problemas');
+    } finally {
+        await sql.close();
+    }
+});
+
+// Endpoint para obtener problemas similares
+app.get('/ProblemasSimilares/:id_problema', async (req, res) => {
+    try {
+        await sql.connect(config);
+        const { id_problema } = req.params;
+        
+        const result = await sql.query`
+            SELECT 
+                p.id_problema,
+                p.titulo,
+                p.descripcion,
+                p.estado,
+                p.categoria,
+                p.prioridad,
+                p.fecha_creacion,
+                ps.fecha_asociacion
+            FROM 
+                PROBLEMAS p
+            JOIN 
+                PROBLEMAS_SIMILARES ps ON (
+                    (ps.id_problema_principal = ${id_problema} AND ps.id_problema_secundario = p.id_problema)
+                    OR 
+                    (ps.id_problema_secundario = ${id_problema} AND ps.id_problema_principal = p.id_problema)
+                )
+            ORDER BY 
+                ps.fecha_asociacion DESC;
+        `;
+        
+        res.status(200).json(result.recordset);
+    } catch (error) {
+        console.error('Error al obtener problemas similares:', error.message);
+        res.status(500).send('Error al obtener problemas similares');
+    } finally {
+        await sql.close();
+    }
+});
+
+app.get('/TodasIncidencias', async (req, res) => {
+    try {
+        await sql.connect(config);
+        const result = await sql.query`
+            SELECT 
+                I.id_incidencia, 
+                D.nombre AS departamento, 
+                I.fecha, 
+                TI.nombre AS nombreIncidencia, 
+                I.descripcion, 
+                EI.estado_incidencia, 
+                EI.color,
+                (SELECT COUNT(*) FROM PROBLEMA_INCIDENCIA WHERE id_incidencia = I.id_incidencia) AS asociada_problema
+            FROM 
+                INCIDENCIA I
+            JOIN 
+                INCIDENCIA_LUGAR IL ON I.id_incidencia = IL.id_incidencia
+            JOIN 
+                ESPACIOS E ON IL.id_espacio = E.id_espacio
+            JOIN 
+                DEPARTAMENTO D ON E.id_departamento = D.id_departamento
+            JOIN 
+                TIPO_INCIDENCIA TI ON TI.id_tipoIncidencia = I.id_tipoIncidencia
+            JOIN
+                ESTADO_INCIDENCIA EI ON EI.id_estado = I.id_estado
+            ORDER BY 
+                I.fecha DESC;
+        `;
+        res.status(200).json(result.recordset);
+    } catch (error) {
+        console.error('Error al obtener todas las incidencias:', error.message);
+        res.status(500).send('Error al obtener todas las incidencias');
+    } finally {
+        await sql.close();
+    }
+});
+app.post('/AsociarIncidenciaProblema', async (req, res) => {
+    try {
+        await sql.connect(config);
+        const { id_incidencia, id_problema } = req.body;
+        
+        // Verificar que la incidencia existe y tiene estado Liberado (3)
+        const checkIncidencia = await sql.query`
+            SELECT id_estado FROM INCIDENCIA 
+            WHERE id_incidencia = ${id_incidencia}
+        `;
+        
+        if (checkIncidencia.recordset.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: 'La incidencia no existe'
+            });
+        }
+        
+        // Asociar la incidencia al problema
+        await sql.query`
+            INSERT INTO PROBLEMA_INCIDENCIA (id_problema, id_incidencia, fecha_asociacion)
+            VALUES (${id_problema}, ${id_incidencia}, GETDATE())
+        `;
+        
+        res.status(200).json({
+            success: true,
+            message: 'Incidencia asociada al problema exitosamente'
+        });
+    } catch (error) {
+        console.error('Error al asociar incidencia:', error.message);
+        res.status(500).send('Error al asociar incidencia al problema');
+    } finally {
+        await sql.close();
+    }
+});
+
+app.post('/AsociarIncidenciaProblema', async (req, res) => {
+    try {
+        await sql.connect(config);
+        const { id_incidencia, id_problema } = req.body;
+        
+        // Verificar que la incidencia existe y tiene estado Liberado (3)
+        const checkIncidencia = await sql.query`
+            SELECT id_estado FROM INCIDENCIA 
+            WHERE id_incidencia = ${id_incidencia}
+        `;
+        
+        if (checkIncidencia.recordset.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: 'La incidencia no existe'
+            });
+        }
+        
+        // Asociar la incidencia al problema
+        await sql.query`
+            INSERT INTO PROBLEMA_INCIDENCIA (id_problema, id_incidencia, fecha_asociacion)
+            VALUES (${id_problema}, ${id_incidencia}, GETDATE())
+        `;
+        
+        res.status(200).json({
+            success: true,
+            message: 'Incidencia asociada al problema exitosamente'
+        });
+    } catch (error) {
+        console.error('Error al asociar incidencia:', error.message);
+        res.status(500).send('Error al asociar incidencia al problema');
+    } finally {
+        await sql.close();
+    }
+});
+app.post('/CrearProblema', async (req, res) => {
+    try {
+        await sql.connect(config);
+        const { titulo, descripcion, categoria, prioridad } = req.body;
+        
+        const result = await sql.query`
+            INSERT INTO PROBLEMAS (
+                titulo, 
+                descripcion, 
+                fecha_creacion,
+                estado,
+                categoria,
+                prioridad
+            ) OUTPUT INSERTED.id_problema
+            VALUES (
+                ${titulo}, 
+                ${descripcion}, 
+                GETDATE(), 
+                'Abierto',
+                ${categoria},
+                ${prioridad}
+            )
+        `;
+        
+        const id_problema = result.recordset[0].id_problema;
+        
+        res.status(200).json({
+            success: true,
+            message: 'Problema creado exitosamente',
+            id_problema: id_problema
+        });
+    } catch (error) {
+        console.error('Error al crear problema:', error.message);
+        res.status(500).send('Error al crear problema');
+    } finally {
+        await sql.close();
     }
 });
 
