@@ -30,12 +30,12 @@ export function TodasIncidencias() {
   // Manejadores para la barra de navegación
   const handleEquipo = (e) => {
     e.preventDefault();
-    navigate('/equipo');
+    navigate('/EquipoBodega');
   };
   
   const handleEquipodeIncidencia = (e) => {
     e.preventDefault();
-    navigate('/nueva-solicitud');
+    navigate('/EquipodeIncidencia');
   };
   
   const handleTodasIncidencias = (e) => {
@@ -134,7 +134,10 @@ export function TodasIncidencias() {
       alert('Error al asociar incidencias');
     }
   };
-  
+  const handleHomeClick = (e) => {
+    e.preventDefault();
+    navigate('/Principal');
+};
   const handleCreateAndAssociate = async () => {
     try {
       // Crear nuevo problema
@@ -164,23 +167,34 @@ export function TodasIncidencias() {
       alert('Error al crear problema o asociar incidencias');
     }
   };
-  
+
   return (
     <div className="principal-admin-container">
       {/* Barra de navegación principal */}
       <div className="principal-admin-buttons">
-        {(permisos === '1' || permisos === '4') && (
-          <button className="btn btn-primary principal-admin-btn" onClick={handleEquipo}>Equipo</button>
-        )}
-        <button type="button" className="btn btn-danger principal-admin-btn" onClick={handleEquipodeIncidencia}>Nueva Solicitud</button>
-        
-        <button type="button" className="btn btn-info principal-admin-btn" onClick={handleTodasIncidencias}>Todas las Incidencias</button>
-        
-        <button type="button" className="btn btn-warning principal-admin-btn" onClick={handleListaProblemas}>Lista de Problemas</button>
-        
-        <button type="button" className="btn btn-success principal-admin-btn" onClick={handleChangePasswordClick}>Contraseña</button>
-        <button type="button" className="btn btn-info principal-admin-btn" onClick={handleCerrarSesion}>Cerrar Sesión</button>
-      </div>
+    <button type="button" className="btn btn-light principal-admin-btn" onClick={handleHomeClick}>Menú principal</button>
+    
+    {(permisos === '1' || permisos === '4') && (
+        <button className="btn btn-primary principal-admin-btn" onClick={handleEquipo}>Equipo</button>
+    )}
+    
+    <button type="button" className="btn btn-danger principal-admin-btn" onClick={handleEquipodeIncidencia}>Nueva Solicitud</button>
+    
+    <button type="button" className="btn btn-warning principal-admin-btn" onClick={handleListaProblemas}>Lista de Problemas</button>
+    
+  
+    
+    <button 
+        type="button" 
+        className="btn btn-info principal-admin-btn" 
+        onClick={handleTodasIncidencias}
+    >
+        Todas las Incidencias
+    </button>
+    
+    <button type="button" className="btn btn-success principal-admin-btn" onClick={handleChangePasswordClick}>Contraseña</button>
+    <button type="button" className="btn btn-info principal-admin-btn" onClick={handleCerrarSesion}>Cerrar Sesión</button>
+    </div>
 
       {/* Contenido original */}
       <Container className="mt-4">

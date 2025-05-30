@@ -2178,6 +2178,103 @@ app.post('/GuardarSolucion', async (req, res) => {
         }
     }
 });
+// Endpoint para obtener información sobre cambios de piezas
+app.get('/ObtenerPiezasDisponibles', async (req, res) => {
+    let pool = null;
+    try {
+      pool = await new sql.ConnectionPool(config).connect();
+      
+      const result = await pool.request()
+        .query(`SELECT id_pieza, nombre, detalle AS descripcion, stock, precioUnitario 
+                FROM PIEZA 
+                WHERE stock > 0 
+                ORDER BY nombre`);
+      
+      res.status(200).json(result.recordset);
+    } catch (error) {
+      console.error('Error al obtener piezas disponibles:', error);
+      res.status(500).json({
+        error: 'Error al obtener piezas disponibles',
+        details: error.message
+      });
+    } finally {
+      if (pool) {
+        await pool.close();
+      }
+    }
+  });
+// Endpoint para obtener información sobre cambios de piezas
+// Endpoint para obtener información sobre cambios de piezas
+app.get('/ObtenerCambioPiezas', async (req, res) => {
+    let pool = null;
+    try {
+        const id_incidencia = parseInt(req.query.id_incidencia, 10);
+        
+        if (isNaN(id_incidencia)) {
+            return res.status(400).json({ error: 'Se requiere un id_incidencia válido' });
+        }
+        
+        console.log(`Buscando información de pieza para incidencia: ${id_incidencia}`);
+        pool = await new sql.ConnectionPool(config).connect();
+        
+        // Verificamos primero si existe la incidencia en la tabla RFC
+        const checkResult = await pool.request()
+            .input('id_incidencia', sql.Int, id_incidencia)
+            .query(`SELECT 1 FROM RFC WHERE incidencia = @id_incidencia`);
+            
+        if (checkResult.recordset.length === 0) {
+            console.log(`No se encontraron registros en RFC para la incidencia: ${id_incidencia}`);
+            // No hay registros en RFC para esta incidencia, responder con vacío
+            return res.status(200).json({ infoPieza: '' });
+        }
+        
+        // Si existe, obtenemos la información completa
+        const result = await pool.request()
+            .input('id_incidencia', sql.Int, id_incidencia)
+            .query(`
+                SELECT 
+                    ISNULL(p.nombre, 'Pieza desconocida') AS nombre_pieza,
+                    ISNULL(p.detalle, 'Sin descripción') AS descripcion_pieza,
+                    r.pieza AS id_pieza,
+                    ISNULL(s.nombre, 'Sin servicio') AS servicio_realizado,
+                    FORMAT(r.hora_inicial, 'HH:mm') AS hora_inicial,
+                    FORMAT(r.hora_final, 'HH:mm') AS hora_final
+                FROM 
+                    RFC r
+                LEFT JOIN 
+                    PIEZA p ON r.pieza = p.id_pieza
+                LEFT JOIN 
+                    SERVICIOS s ON r.id_servicio = s.id_servicio
+                WHERE 
+                    r.incidencia = @id_incidencia
+            `);
+        
+        console.log(`Resultados encontrados: ${result.recordset.length}`);
+        
+        if (result.recordset.length > 0) {
+            const nombre_pieza = result.recordset[0].nombre_pieza || 'Pieza desconocida';
+            const descripcion_pieza = result.recordset[0].descripcion_pieza || 'Sin descripción';
+            const infoPieza = `${nombre_pieza} (${descripcion_pieza})`;
+            res.status(200).json({ infoPieza: infoPieza });
+        } else {
+            res.status(200).json({ infoPieza: '' });
+        }
+    } catch (error) {
+        console.error('Error al obtener información de cambio de piezas:', error);
+        // Log más detallado para ayudar a diagnosticar el problema
+        if (error.originalError) {
+            console.error('SQL Error:', error.originalError);
+        }
+        res.status(500).json({ 
+            error: 'Error al obtener información de cambio de piezas', 
+            details: error.message 
+        });
+    } finally {
+        if (pool) {
+            await pool.close();
+        }
+    }
+});
 
 // Endpoint para obtener la solución personalizada
 app.get('/ObtenerSolucion', async (req, res) => {

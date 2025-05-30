@@ -7,24 +7,40 @@ import React, { useState, useEffect } from 'react';
 
 
 export const Principal_otro = () => {
-    
-    const handleGuardarSolucion = async () => {
+    const handleSolicitarPiezas = async () => {
         try {
-            const response = await axios.post('http://localhost:3000/GuardarSolucion', {
+            if (!piezaRequerida || cantidadPieza < 1) {
+                alert('Por favor seleccione una pieza y una cantidad válida');
+                return;
+            }
+            
+            const response = await axios.post('http://localhost:3000/SolicitarPiezas', {
                 id_incidencia: id_incidencia,
-                solucion: solucionPersonalizada
+                id_pieza: piezaRequerida,
+                cantidad: cantidadPieza,
+                justificacion: justificacionPieza
             });
-    
+            
             if (response.status === 200) {
-                alert('Solución guardada correctamente');
+                alert('Solicitud de piezas enviada correctamente');
+                // Restablecer los campos
+                setNecesitaPiezas(false);
+                setPiezaRequerida('');
+                setCantidadPieza(1);
+                setJustificacionPieza('');
             } else {
-                alert('Error al guardar la solución');
+                alert('Error al enviar la solicitud de piezas');
             }
         } catch (error) {
-            console.error('Error al guardar la solución:', error);
-            alert('Error al guardar la solución');
+            console.error('Error al solicitar piezas:', error);
+            alert('Error al procesar la solicitud de piezas');
         }
     };
+
+    const [necesitaPiezas, setNecesitaPiezas] = useState(false);
+    const [piezaRequerida, setPiezaRequerida] = useState('');
+    const [cantidadPieza, setCantidadPieza] = useState(1);
+    const [justificacionPieza, setJustificacionPieza] = useState('');
     const [otroDiagnostico, setOtroDiagnostico] = useState(''); 
     const navigate = useNavigate();
     const [showModal, setShowModal] = useState(false);
@@ -1613,6 +1629,38 @@ export const Principal_otro = () => {
             serIdCau(solucion.id_causa_raiz);
             setCauNom(solucion.caunom);
             setCauDes(solucion.caudes);
+            try {
+                const solucionResponse = await axios.get('http://localhost:3000/ObtenerSolucion', {
+                    params: { id_incidencia: incidencia.id_incidencia }
+                });
+                
+                if (solucionResponse.data && solucionResponse.data.solucion) {
+                    setSolucionPersonalizada(solucionResponse.data.solucion);
+                } else {
+                    setSolucionPersonalizada('');
+                }
+            } catch (error) {
+                console.error('Error al cargar solución personalizada:', error);
+                setSolucionPersonalizada('');
+            }
+            
+            // Cargar información sobre cambios de piezas
+            try {
+                const piezasResponse = await axios.get('http://localhost:3000/ObtenerCambioPiezas', {
+                    params: { id_incidencia: incidencia.id_incidencia }
+                });
+                
+                if (piezasResponse.data && piezasResponse.data.infoPieza) {
+                    setInfoPieza(piezasResponse.data.infoPieza);
+                } else {
+                    setInfoPieza('');
+                }
+            } catch (error) {
+                console.error('Error al cargar información de piezas:', error);
+                setInfoPieza('');
+            }
+            
+            setShowModal3(true);
     
         } catch (error) {
             console.error('Hubo un problema al traer el detalle de la incidencia:', error.message);
@@ -1637,24 +1685,27 @@ export const Principal_otro = () => {
     const handleSolucion = async (e) => {
         e.preventDefault();
         try {
-            if (!expanded) {
-                // Si es primera vez que se abre, intenta cargar la solución existente
-                try {
-                    const response = await axios.get('http://localhost:3000/ObtenerSolucion', {
-                        params: { id_incidencia: id_incidencia }
-                    });
-                    if (response.data && response.data.solucion) {
-                        setSolucionPersonalizada(response.data.solucion);
-                    }
-                } catch (error) {
-                    console.error('Error al cargar la solución:', error);
-                }
+          if (!expanded) {
+            // Si es primera vez que se abre, intenta cargar la solución existente
+            try {
+              const response = await axios.get('http://localhost:3000/ObtenerSolucion', {
+                params: { id_incidencia: id_incidencia }
+              });
+              if (response.data && response.data.solucion) {
+                setSolucionPersonalizada(response.data.solucion);
+              }
+            } catch (error) {
+              console.error('Error al cargar la solución:', error);
             }
-            setExpanded(!expanded);
+      
+            // Cargar la lista de piezas disponibles
+            await cargarPiezasDisponibles();
+          }
+          setExpanded(!expanded);
         } catch (error) {
-            console.error('Error al abrir/cerrar sección de solución:', error);
+          console.error('Error al abrir/cerrar sección de solución:', error);
         }
-    };
+      };
     
     const handleLugar = async (e) => {
         e.preventDefault();
@@ -1665,6 +1716,47 @@ export const Principal_otro = () => {
             console.error('Error al obtener el lugar', error);
         }
     };
+    const [editingSolution, setEditingSolution] = useState(false);
+
+    // Modifica la función handleGuardarSolucion
+    const handleGuardarSolucion = async () => {
+        try {
+            const response = await axios.post('http://localhost:3000/GuardarSolucion', {
+                id_incidencia: id_incidencia,
+                solucion: solucionPersonalizada
+            });
+
+            if (response.status === 200) {
+                alert('Solución guardada correctamente');
+                setEditingSolution(false); // Desactivar modo edición después de guardar
+            } else {
+                alert('Error al guardar la solución');
+            }
+        } catch (error) {
+            console.error('Error al guardar la solución:', error);
+            alert('Error al guardar la solución');
+        }
+    };
+
+    // Función para activar el modo edición
+    const handleEditSolution = () => {
+        setEditingSolution(true);
+    };
+
+    const cargarPiezasDisponibles = async () => {
+        try {
+          const response = await axios.get('http://localhost:3000/ObtenerPiezasDisponibles');
+          if (response.data && Array.isArray(response.data)) {
+            setPiezas(response.data);
+            console.log("Piezas cargadas:", response.data);
+          } else {
+            console.error("La respuesta de piezas no tiene el formato esperado");
+          }
+        } catch (error) {
+          console.error('Error al cargar piezas disponibles:', error);
+          alert('No se pudieron cargar las piezas disponibles');
+        }
+      };
 
     const handlePeticion = async () => {
         try {
@@ -1686,6 +1778,7 @@ export const Principal_otro = () => {
                 diag: idDiag,
                 tipoIncidencia: tipoIncidencia,
                 id_equipo: idEquipo.data[0].id_equipo
+           
             });
 
             const hora_inicial = obtenerHoraActual();
@@ -1724,11 +1817,7 @@ export const Principal_otro = () => {
         
         <button type="button" className="btn btn-warning principal-admin-btn" onClick={handleListaProblemas}>Lista de Problemas</button>
         
-        {permisos === '1' && (
-            <button type="button" className="btn btn-primary principal-admin-btn" onClick={handleAsociarProblemas}>
-            Asociar Problemas
-            </button>
-        )}
+       
         
         <button 
             type="button" 
@@ -1997,6 +2086,9 @@ export const Principal_otro = () => {
                                                 </button>
                                                 {expandedL && (
                                                     <div>
+                                                        <span className='nito'>Solución Personalizada: </span>
+                                                        <span>{solucionPersonalizada || 'No se ha registrado una solución'}</span>
+                                                        <br />
                                                         <span>Edificio: {nomEdificio}</span>
                                                         <br />
                                                         <span>Ubicación Edificio: {ubiEdificio}</span>
@@ -2017,45 +2109,140 @@ export const Principal_otro = () => {
                                     {( permisos === '1') && (
                                         <>
                                         <span className='nito'>Solución Personalizada: </span>
-                                        <span>{solucionPersonalizada}</span>
+                                        
+                                        <span>{solucionPersonalizada || 'No se ha registrado una solución'}</span>
                                         </>
                                     )}
-                                    {( permisos === '2' && infoPieza) && (
+                                    {/* Para usuarios con permiso 2 y si hay información de piezas */}
+                                    { infoPieza && (
                                         <>
+                                        <br></br>
                                         <span className='nito'>Cambio de pieza: </span>
                                         <span>{infoPieza}</span>
                                         </>
                                     )}
-                                    {(permisos === '4' || permisos === '5') && eC && (
-                                        <div className="scrollable">
-                                            <button className="nito color-naranja custom-buttonEB tam-dI" onClick={handleSolucion}>
-                                                SOLUCIÓN
-                                            </button>
-                                            {expanded && (
-                                                <div>
-                                                    <div className="mt-3 mb-4">
-                                                        <span className='nito'>Solución Personalizada: </span>
-                                                        <textarea
-                                                            className="form-control mt-2"
-                                                            rows="4"
-                                                            placeholder="Describe la solución aplicada a esta incidencia..."
-                                                            value={solucionPersonalizada}
-                                                            onChange={(e) => setSolucionPersonalizada(e.target.value)}
-                                                        ></textarea>
-                                                        <button 
-                                                            type="button" 
-                                                            className="btn btn-sm btn-success mt-2" 
-                                                            onClick={handleGuardarSolucion}
-                                                        >
-                                                            Guardar solución
-                                                        </button>
-                                                    </div>
-                                                    
-                                                    
+                                   {(permisos === '4' || permisos === '5') && eC && (
+                                    <div className="scrollable">
+                                        <button className="nito color-naranja custom-buttonEB tam-dI" onClick={handleSolucion}>
+                                            SOLUCIÓN
+                                        </button>
+                                        {expanded && (
+                                            <div>
+                                                <div className="mt-3 mb-4">
+                                                    <span className='nito'>Solución Personalizada: </span>
+                                                    {editingSolution || !solucionPersonalizada ? (
+                                                        // Modo edición
+                                                        <>
+                                                            <textarea
+                                                                className="form-control mt-2"
+                                                                rows="4"
+                                                                placeholder="Describe la solución aplicada a esta incidencia..."
+                                                                value={solucionPersonalizada}
+                                                                onChange={(e) => setSolucionPersonalizada(e.target.value)}
+                                                            ></textarea>
+                                                            
+                                                            {/* Formulario para solicitud de piezas */}
+                                                            <div className="mt-3 border p-3 rounded bg-light">
+                                                                <div className="form-check mb-2">
+                                                                    <input 
+                                                                        className="form-check-input" 
+                                                                        type="checkbox" 
+                                                                        id="necesitaPiezas"
+                                                                        checked={necesitaPiezas}
+                                                                        onChange={(e) => setNecesitaPiezas(e.target.checked)} 
+                                                                    />
+                                                                    <label className="form-check-label" htmlFor="necesitaPiezas">
+                                                                        <strong>Se requieren piezas para esta solución</strong>
+                                                                    </label>
+                                                                </div>
+                                                                
+                                                                {necesitaPiezas && (
+                                                                    <>
+                                                                        <div className="mb-3">
+                                                                            <label htmlFor="selectPieza" className="form-label">Seleccionar pieza necesaria:</label>
+                                                                            <select 
+                                                                                className="form-select" 
+                                                                                id="selectPieza"
+                                                                                value={piezaRequerida}
+                                                                                onChange={(e) => setPiezaRequerida(e.target.value)}
+                                                                            >
+                                                                                <option value="" disabled>Seleccione una pieza</option>
+                                                                                {piezas.map((pza) => (
+                                                                                    <option value={pza.id_pieza} key={pza.id_pieza}>{pza.nombre}</option>
+                                                                                ))}
+                                                                            </select>
+                                                                        </div>
+                                                                        
+                                                                        <div className="mb-3">
+                                                                            <label htmlFor="cantidadPieza" className="form-label">Cantidad:</label>
+                                                                            <input 
+                                                                                type="number" 
+                                                                                className="form-control" 
+                                                                                id="cantidadPieza" 
+                                                                                min="1" 
+                                                                                value={cantidadPieza}
+                                                                                onChange={(e) => setCantidadPieza(e.target.value)}
+                                                                            />
+                                                                        </div>
+                                                                        
+                                                                        <div className="mb-3">
+                                                                            <label htmlFor="justificacionPieza" className="form-label">Justificación:</label>
+                                                                            <textarea 
+                                                                                className="form-control"
+                                                                                id="justificacionPieza"
+                                                                                rows="2"
+                                                                                placeholder="Explique por qué se necesita esta pieza..."
+                                                                                value={justificacionPieza}
+                                                                                onChange={(e) => setJustificacionPieza(e.target.value)}
+                                                                            ></textarea>
+                                                                        </div>
+                                                                    </>
+                                                                )}
+                                                            </div>
+                                                            
+                                                            <div className="mt-2 d-flex justify-content-between">
+                                                                <button 
+                                                                    type="button" 
+                                                                    className="btn btn-sm btn-success" 
+                                                                    onClick={handleGuardarSolucion}
+                                                                >
+                                                                    Guardar solución
+                                                                </button>
+                                                                
+                                                                {necesitaPiezas && piezaRequerida && cantidadPieza > 0 && (
+                                                                    <button 
+                                                                        type="button" 
+                                                                        className="btn btn-sm btn-primary" 
+                                                                        onClick={handleSolicitarPiezas}
+                                                                    >
+                                                                        Solicitar piezas
+                                                                    </button>
+                                                                )}
+                                                            </div>
+                                                        </>
+                                                    ) : (
+                                                        // Modo visualización
+                                                        <>
+                                                            <div className="p-2 border rounded mt-2">
+                                                                {solucionPersonalizada}
+                                                            </div>
+                                                            {/* Solo mostrar botón de editar si no se ha solicitado autorización */}
+                                                            {btnAutorizacion === false && (
+                                                                <button 
+                                                                    type="button" 
+                                                                    className="btn btn-sm btn-primary mt-2" 
+                                                                    onClick={handleEditSolution}
+                                                                >
+                                                                    Editar solución
+                                                                </button>
+                                                            )}
+                                                        </>
+                                                    )}
                                                 </div>
-                                            )}
-                                        </div>
-                                    )}
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
                                 </form>
                             </div>
                             <div className="modal-footer">
@@ -2359,7 +2546,7 @@ export const Principal_otro = () => {
                                         </select>
                                         </>
                                     )}
-                                    {( estado === 'Liberado' && infoPieza) && (
+                                    {( infoPieza) && (
                                         <>
                                         <span className='nito'>Cambio de pieza: </span>
                                         <span>{infoPieza}</span>
